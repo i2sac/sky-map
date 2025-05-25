@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:sky_map/astras/bloc/astra_bloc.dart';
+import 'package:sky_map/astras/bloc/astra_event.dart';
+import 'package:sky_map/astras/view/canvas.dart';
 
-void main() {
+import 'astras/bloc/astra_state.dart';
+
+Future main() async {
+  // Variables d'environnement
+  await dotenv.load(fileName: '.env');
+
+  // Observer
+  Bloc.observer = CustomBlocObserver();
   runApp(const MyApp());
 }
 
@@ -10,56 +23,59 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      title: 'Sky Map',
+      debugShowCheckedModeBanner: false,
+      home: BlocProvider(
+        create: (context) => AstraBloc(data: [])..add(AppOpened()),
+        child: const MyHomePage(),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      backgroundColor: Colors.black,
+      body: BlocBuilder<AstraBloc, AstraState>(
+        builder: (context, state) {
+          final notLoaded = state.props.isEmpty;
+          return Stack(
+            children: [
+              const BlackCanvas(),
+              if (notLoaded)
+                Container(
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                  color: Colors.black,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 10,
+                    children: [
+                      Text(
+                        'Sky Map',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SpinKitFadingCircle(size: 40, color: Colors.white),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

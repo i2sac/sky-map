@@ -1,0 +1,9 @@
+# Etapes :
+
+✔ Créer le repo Gitea et Github @done(25-05-23 20:07)
+✔ Créer le canva noir @done(25-05-23 20:07)
+✔ Récupérer informations astres @done(25-05-23 20:07)
+✔ Créer la structure de bloc @done(25-05-25 04:03)
+☐ Utiliser les sensors pour détecter les mouvements
+☐ Créer un objet céleste placé au nord à l'horizon
+☐ Calculer le mouvement de l’appareil pour afficher l’objet dans le canva
