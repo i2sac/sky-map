@@ -43,7 +43,7 @@ class MyPainter extends CustomPainter {
           '${astra.name}: alt = ${astra.altitude}, az = ${astra.azimuth}, mag = ${astra.magnitude}',
         );
         canvas.drawCircle(
-          Offset((ox + astra.azimuth) * 2, oy + astra.altitude),
+          Offset((ox + astra.azimuth) * 1.5, oy + astra.altitude),
           taille,
           Paint()
             ..color = Colors.lightBlueAccent

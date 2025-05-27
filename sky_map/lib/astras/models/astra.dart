@@ -10,7 +10,7 @@ class Astra extends Equatable {
       declination,
       magnitude;
 
-  Astra({
+  const Astra({
     required this.name,
     required this.distanceAU,
     required this.distanceKM,

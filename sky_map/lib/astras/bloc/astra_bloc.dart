@@ -5,14 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
 import 'package:sky_map/astras/bloc/astra_state.dart';
 import 'package:sky_map/astras/models/astra.dart';
 
 class AstraBloc extends Bloc<AstraEvent, AstraState> {
   List<Astra> data = [];
-  Orientation? orientation;
+  double? angle;
 
   AstraBloc({required this.data}) : super(const AstraState([])) {
     on<AppOpened>(_fetchData);
@@ -86,30 +85,8 @@ class AstraBloc extends Bloc<AstraEvent, AstraState> {
       }
     }
 
-    magnetometerEvents.listen((MagnetometerEvent event) {
-      // Update the orientation based on magnetometer data
-      if (orientation == null) {
-        orientation = Orientation(event.x, event.y, event.z);
-      } else if (orientation!.x != event.x ||
-          orientation!.y != event.y ||
-          orientation!.z != event.z) {
-        // Update only if the values have changed
-        orientation!.x = event.x;
-        orientation!.y = event.y;
-        orientation!.z = event.z;
-
-        // Log the magnetometer data
-        print('Magnetometer: x=${event.x}, y=${event.y}, z=${event.z}');
-      }
-    });
-
     emit(AstraState(data));
   }
-}
-
-class Orientation {
-  double x, y, z;
-  Orientation(this.x, this.y, this.z);
 }
 
 class CustomBlocObserver extends BlocObserver {

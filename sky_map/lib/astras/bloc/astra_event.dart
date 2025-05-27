@@ -6,5 +6,3 @@ class AstraEvent extends Equatable {
 }
 
 final class AppOpened extends AstraEvent {}
-
-final class PhoneMoved extends AstraEvent {}

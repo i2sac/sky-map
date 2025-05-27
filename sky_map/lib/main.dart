@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
-import 'package:sky_map/astras/view/canvas.dart';
+import 'package:sky_map/phone/view/canvas.dart';
+import 'package:sky_map/phone/bloc/phone_bloc.dart';
+import 'package:sky_map/phone/bloc/phone_event.dart';
 
 import 'astras/bloc/astra_state.dart';
 
@@ -25,8 +31,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Sky Map',
       debugShowCheckedModeBanner: false,
-      home: BlocProvider(
-        create: (context) => AstraBloc(data: [])..add(AppOpened()),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<AstraBloc>(
+            create: (context) => AstraBloc(data: [])..add(AppOpened()),
+          ),
+          BlocProvider<PhoneBloc>(create: (context) => PhoneBloc()),
+        ],
         child: const MyHomePage(),
       ),
     );
@@ -41,6 +52,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  StreamSubscription? _accelerometerSubscription;
+  StreamSubscription? _magnetometerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen to orientation changes
+    _accelerometerSubscription = accelerometerEvents.listen((
+      AccelerometerEvent event,
+    ) {
+      context.read<PhoneBloc>().add(PhoneAccelerometerEvent(event));
+    });
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
