@@ -6,11 +6,12 @@ class PhoneEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class PhoneAccelerometerEvent extends PhoneEvent {
-  final AccelerometerEvent event;
+final class PhoneOrientationEvent extends PhoneEvent {
+  final AccelerometerEvent acc;
+  final MagnetometerEvent mag;
 
-  PhoneAccelerometerEvent(this.event);
+  PhoneOrientationEvent(this.acc, this.mag);
 
   @override
-  List<double> get props => [event.x, event.y, event.z];
+  List<Object> get props => [acc, mag];
 }

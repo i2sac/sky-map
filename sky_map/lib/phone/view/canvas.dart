@@ -15,7 +15,7 @@ class BlackCanvas extends StatelessWidget {
       child: BlocBuilder<PhoneBloc, PhoneRotatedState>(
         builder: (context, state) {
           return Transform.rotate(
-            angle: state.angle,
+            angle: 0,
             child: BlocBuilder<AstraBloc, AstraState>(
               builder: (astraContext, astraState) {
                 return CustomPaint(

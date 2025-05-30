@@ -60,15 +60,18 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     // Listen to orientation changes
     _accelerometerSubscription = accelerometerEvents.listen((
-      AccelerometerEvent event,
+      AccelerometerEvent acc,
     ) {
-      context.read<PhoneBloc>().add(PhoneAccelerometerEvent(event));
+      _magnetometerSubscription = magnetometerEvents.listen((MagnetometerEvent mag) {
+        context.read<PhoneBloc>().add(PhoneOrientationEvent(acc, mag));
+      });
     });
   }
 
   @override
   void dispose() {
     _accelerometerSubscription?.cancel();
+    _magnetometerSubscription?.cancel();
     super.dispose();
   }
 
