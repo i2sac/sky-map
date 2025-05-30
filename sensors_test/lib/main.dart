@@ -42,9 +42,10 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription? _orientationStream;
 
   Text title(String txt) {
-    return Text(txt,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            );
+    return Text(
+      txt,
+      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    );
   }
 
   // Fonction pour calculer les angles d'Euler
@@ -52,25 +53,24 @@ class _MyHomePageState extends State<MyHomePage> {
     // 1. Calcul du roulis et du tangage à partir de l'accéléromètre
     _calcRoll = atan2(_ay, _az) * 180 / pi;
     _calcPitch = atan2(-_ax, sqrt(_ay * _ay + _az * _az)) * 180 / pi;
-    
+
     // 2. Calcul du lacet (azimut) avec compensation magnétique
     final double rollRad = _calcRoll * pi / 180;
     final double pitchRad = _calcPitch * pi / 180;
-    
+
     final double cosRoll = cos(rollRad);
     final double sinRoll = sin(rollRad);
     final double cosPitch = cos(pitchRad);
     final double sinPitch = sin(pitchRad);
-    
+
     // Composantes magnétiques compensées
     final double magX = _mx * cosPitch + _mz * sinPitch;
-    final double magY = _mx * sinRoll * sinPitch + 
-                        _my * cosRoll - 
-                        _mz * sinRoll * cosPitch;
-    
+    final double magY =
+        _mx * sinRoll * sinPitch + _my * cosRoll - _mz * sinRoll * cosPitch;
+
     // 3. Calcul de l'azimut
     _calcAzimuth = atan2(-magY, magX) * 180 / pi;
-    
+
     // Normaliser entre 0-360°
     if (_calcAzimuth < 0) _calcAzimuth += 360;
   }
@@ -78,18 +78,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    
-    _accelerometerStream = accelerometerEvents.listen((AccelerometerEvent event) {
-      setState(() {
-        _ax = event.x;
-        _ay = event.y;
-        _az = event.z;
-        _calculateEulerAngles();
-      });
-    });
 
     _magnetometerStream = magnetometerEvents.listen((MagnetometerEvent event) {
       setState(() {
+        _accelerometerStream = accelerometerEvents.listen((
+          AccelerometerEvent event,
+        ) {
+          _ax = event.x;
+          _ay = event.y;
+          _az = event.z;
+        });
+        
         _mx = event.x;
         _my = event.y;
         _mz = event.z;
@@ -131,23 +130,27 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             title('Accelerometer'),
             Text('${format(_ax)}, ${format(_ay)}, ${format(_az)}'),
-            
+
             const SizedBox(height: 20),
             title('Magnetometer'),
             Text('${format(_mx)}, ${format(_my)}, ${format(_mz)}'),
-            
+
             const SizedBox(height: 20),
             title('Orientation (Sensor)'),
-            Text('Azimuth: ${format(_azimuth)}\n'
-                 'Pitch: ${format(_pitch)}\n'
-                 'Roll: ${format(_roll)}'),
-            
+            Text(
+              'Azimuth: ${format(_azimuth)}\n'
+              'Pitch: ${format(_pitch)}\n'
+              'Roll: ${format(_roll)}',
+            ),
+
             // Ajout de la section pour les angles calculés
             const SizedBox(height: 30),
             title('Calculated Orientation'),
-            Text('Azimuth: ${format(_calcAzimuth)}\n'
-                 'Pitch: ${format(_calcPitch)}\n'
-                 'Roll: ${format(_calcRoll)}'),
+            Text(
+              'Azimuth: ${format(_calcAzimuth)}\n'
+              'Pitch: ${format(_calcPitch)}\n'
+              'Roll: ${format(_calcRoll)}',
+            ),
           ],
         ),
       ),

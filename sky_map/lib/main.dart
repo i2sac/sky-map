@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,12 +58,23 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     // Listen to orientation changes
+    AccelerometerEvent? accEv;
+    MagnetometerEvent? magEv;
+
     _accelerometerSubscription = accelerometerEvents.listen((
       AccelerometerEvent acc,
     ) {
-      _magnetometerSubscription = magnetometerEvents.listen((MagnetometerEvent mag) {
-        context.read<PhoneBloc>().add(PhoneOrientationEvent(acc, mag));
-      });
+      accEv = acc;
+    });
+
+    _magnetometerSubscription = magnetometerEvents.listen((
+        MagnetometerEvent mag,
+      ) {
+      magEv = mag;
+      if (accEv != null && magEv != null) {
+        // Dispatch the event to the PhoneBloc
+        context.read<PhoneBloc>().add(PhoneOrientationEvent(accEv!, magEv!));
+      }
     });
   }
 

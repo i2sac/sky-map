@@ -20,7 +20,8 @@ class BlackCanvas extends StatelessWidget {
               builder: (astraContext, astraState) {
                 return CustomPaint(
                   size: Size.infinite,
-                  painter: MyPainter(astraContext, astraState),
+                  painter: MyPainter(astraContext, astraState, 
+                      state.azimuth, state.pitch, state.roll),
                 );
               },
             ),

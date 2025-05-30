@@ -1,3 +1,3 @@
 git add .
 git commit -m "$1"
-git push -f github ; git push -f origin
+git push github ; git push origin

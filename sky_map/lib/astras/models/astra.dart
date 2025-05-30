@@ -22,6 +22,9 @@ class Astra extends Equatable {
     required this.magnitude,
   });
 
+  double get distanceInKM => distanceKM;
+  double get distanceInAU => distanceAU;
+
   @override
   List<Object> get props => [
     name,
