@@ -6,7 +6,6 @@ import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/bloc/phone_state.dart';
 
 class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
-  double _azimuth = 0, _pitch = 0, _roll = 0;
   AccelerometerEvent? _accEv;
   MagnetometerEvent? _magEv;
 
