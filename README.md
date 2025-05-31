@@ -80,4 +80,4 @@ Ce projet est sous licence [MIT](LICENSE). Vous êtes libre de l'utiliser et de 
 
 Profitez de l'exploration du ciel avec Sky Map ! 🌠
 
-*Créé avec ❤️ par l'équipe Sky Map*
+*Créé avec ❤️ par [Louis Isaac DIOUF](@i2sac)*
