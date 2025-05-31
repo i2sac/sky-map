@@ -1,0 +1,1 @@
+ C:\\Users\\7MAKSACOD\ PC\\Documents\\repositories\\z01\\FLUTTER\\sky-map\\sky_map\\.dart_tool\\flutter_build\\7e4405c38cc2fcba29201bea9645db8a\\native_assets.json: 
