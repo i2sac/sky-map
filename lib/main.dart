@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     // Listen to orientation changes
-    RotationSensor.samplingPeriod = SensorInterval.normalInterval;
+    RotationSensor.samplingPeriod = SensorInterval.gameInterval;
     _orientationStream = RotationSensor.orientationStream.listen((event) {
       if (mounted && context.read<AstraBloc>().state.props.isNotEmpty) {
         context.read<PhoneBloc>().add(PhoneOrientationEvent(event));
