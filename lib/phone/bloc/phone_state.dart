@@ -14,5 +14,11 @@ class PhoneRotatedState extends Equatable {
   });
 
   @override
-  List<Object> get props => [backVector, rightVector, upVector, azimuth, altitude];
+  List<Object> get props => [
+    backVector,
+    rightVector,
+    upVector,
+    azimuth,
+    altitude,
+  ];
 }

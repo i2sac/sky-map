@@ -8,7 +8,16 @@ import 'package:sky_map/phone/bloc/phone_state.dart';
 class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
   PhoneOrientationEvent? _orientationEvent;
 
-  PhoneBloc() : super(PhoneRotatedState(backVector: Vector3(0, 0, -1), rightVector: Vector3(1, 0, 0), upVector: Vector3(0, 1, 0), azimuth: 0, altitude: -180)) {
+  PhoneBloc()
+    : super(
+        PhoneRotatedState(
+          backVector: Vector3(0, 0, -1),
+          rightVector: Vector3(1, 0, 0),
+          upVector: Vector3(0, 1, 0),
+          azimuth: 0,
+          altitude: -180,
+        ),
+      ) {
     on<PhoneOrientationEvent>(_phoneRotated);
   }
 
@@ -20,8 +29,9 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
         equalQuaternion(
           _orientationEvent!.val.quaternion,
           event.val.quaternion,
-        ))
-      {return;}
+        )) {
+      return;
+    }
     _orientationEvent = event;
 
     Vector3 rightVector = Vector3(1, 0, 0);
@@ -44,13 +54,15 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
     // print('Right Vecor: (${format(rotatedRight.x)}, ${format(rotatedRight.y)}, ${format(rotatedRight.z)})');
     // print('Up Vector: (${format(rotatedUp.x)}, ${format(rotatedUp.y)}, ${format(rotatedUp.z)})');
 
-    emit(PhoneRotatedState(
-      backVector: rotatedBack,
-      rightVector: rotatedRight,
-      upVector: rotatedUp,
-      azimuth: azimuth,
-      altitude: altitude
-    ));
+    emit(
+      PhoneRotatedState(
+        backVector: rotatedBack,
+        rightVector: rotatedRight,
+        upVector: rotatedUp,
+        azimuth: azimuth,
+        altitude: altitude,
+      ),
+    );
   }
 }
 

@@ -29,7 +29,7 @@ class BlackCanvas extends StatelessWidget {
     'Neptune': 49244.0,
     'Sun': 1392700.0,
   };
-   static const Map<String, Color> planetColors = {
+  static const Map<String, Color> planetColors = {
     'Mercury': Color(0xFF9F9F9F),
     'Venus': Color(0xFFE6E6BA),
     'Mars': Color(0xFFE67A50),
@@ -40,9 +40,16 @@ class BlackCanvas extends StatelessWidget {
     'Sun': Color(0xFFFFDF00),
     'Moon': Color(0xFFF4F6F0),
   };
-  static const double scaleFactorForApparentSize = 100.0; // Le même 'scale' que dans MyPainter
+  static const double scaleFactorForApparentSize =
+      100.0; // Le même 'scale' que dans MyPainter
 
-  void _handleTap(BuildContext context, TapUpDetails details, AstraState astraState, PhoneRotatedState phoneState, Size screenSize) {
+  void _handleTap(
+    BuildContext context,
+    TapUpDetails details,
+    AstraState astraState,
+    PhoneRotatedState phoneState,
+    Size screenSize,
+  ) {
     final Offset tapPosition = details.localPosition;
     double ox = screenSize.width / 2;
     double oy = screenSize.height / 2;
@@ -53,9 +60,21 @@ class BlackCanvas extends StatelessWidget {
     double scaleDegToPixY = screenSize.height / fovDegrees;
 
     if (astraState.props.isNotEmpty) {
-      final vm.Vector3 phoneX = vm.Vector3(phoneState.rightVector.x, phoneState.rightVector.y, phoneState.rightVector.z);
-      final vm.Vector3 phoneY = vm.Vector3(phoneState.upVector.x, phoneState.upVector.y, phoneState.upVector.z);
-      final vm.Vector3 phoneZ = vm.Vector3(phoneState.backVector.x, phoneState.backVector.y, phoneState.backVector.z);
+      final vm.Vector3 phoneX = vm.Vector3(
+        phoneState.rightVector.x,
+        phoneState.rightVector.y,
+        phoneState.rightVector.z,
+      );
+      final vm.Vector3 phoneY = vm.Vector3(
+        phoneState.upVector.x,
+        phoneState.upVector.y,
+        phoneState.upVector.z,
+      );
+      final vm.Vector3 phoneZ = vm.Vector3(
+        phoneState.backVector.x,
+        phoneState.backVector.y,
+        phoneState.backVector.z,
+      );
 
       final vm.Matrix3 viewMatrix = vm.Matrix3.zero();
       viewMatrix.setRow(0, phoneX);
@@ -84,7 +103,8 @@ class BlackCanvas extends StatelessWidget {
         double angleHorizontalDeg = angleHorizontalRad * 180 / pi;
         double angleVerticalDeg = angleVerticalRad * 180 / pi;
 
-        if (angleHorizontalDeg.abs() > fovHalfDegrees || angleVerticalDeg.abs() > fovHalfDegrees) {
+        if (angleHorizontalDeg.abs() > fovHalfDegrees ||
+            angleVerticalDeg.abs() > fovHalfDegrees) {
           continue;
         }
 
@@ -93,12 +113,15 @@ class BlackCanvas extends StatelessWidget {
 
         double planetDiameter = solarSystemPlanets[astra.name] ?? 0.0;
         double distanceToPlanet = pCamera.length;
-        double apparentAngleRad = 2 * atan((planetDiameter / 2) / distanceToPlanet);
-        double apparentSize = (apparentAngleRad * 180 / pi) * scaleFactorForApparentSize;
+        double apparentAngleRad =
+            2 * atan((planetDiameter / 2) / distanceToPlanet);
+        double apparentSize =
+            (apparentAngleRad * 180 / pi) * scaleFactorForApparentSize;
         apparentSize = apparentSize.clamp(10.0, 50.0);
 
         // Vérifier si le clic est dans le cercle de l'astre
-        final double distanceToAstraCenter = (Offset(projectedX, projectedY) - tapPosition).distance;
+        final double distanceToAstraCenter =
+            (Offset(projectedX, projectedY) - tapPosition).distance;
         if (distanceToAstraCenter <= apparentSize) {
           tappedAstra = astra;
           break; // Prendre le premier astre trouvé (le plus en avant en cas de superposition)
@@ -111,11 +134,12 @@ class BlackCanvas extends StatelessWidget {
         // print('Tapped on: ${tappedAstra.name}');
         showDialog(
           context: context,
-          builder: (_) => PlanetInfoModal(
-              astra: tappedAstra!,
-              planetColors: planetColors,
-              solarSystemPlanets: solarSystemPlanets,
-          ),
+          builder:
+              (_) => PlanetInfoModal(
+                astra: tappedAstra!,
+                planetColors: planetColors,
+                solarSystemPlanets: solarSystemPlanets,
+              ),
         );
       }
     }
@@ -133,7 +157,14 @@ class BlackCanvas extends StatelessWidget {
         return BlocBuilder<AstraBloc, AstraState>(
           builder: (context, astraState) {
             return GestureDetector(
-              onTapUp: (details) => _handleTap(context, details, astraState, phoneState, screenSize),
+              onTapUp:
+                  (details) => _handleTap(
+                    context,
+                    details,
+                    astraState,
+                    phoneState,
+                    screenSize,
+                  ),
               child: CustomPaint(
                 size: Size.infinite, // ou screenSize pour être plus précis
                 painter: MyPainter(context, astraState, phoneState),

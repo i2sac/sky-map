@@ -11,39 +11,34 @@ class MyPainter extends CustomPainter {
   final PhoneRotatedState phoneState;
   final double scale = 100.0; // Scaling factor for apparent size
   final Map<String, double> solarSystemPlanets = {
-    'Moon': 3474.8,      // Diamètre en km
+    'Moon': 3474.8, // Diamètre en km
     'Mercury': 4879.4,
     'Venus': 12104.0,
     'Mars': 6779.0,
     'Jupiter': 139820.0,
-    'Saturn': 116460.0,   // Diamètre sans les anneaux
+    'Saturn': 116460.0, // Diamètre sans les anneaux
     'Uranus': 50724.0,
     'Neptune': 49244.0,
-    'Sun': 1392700.0,    // Ajout du Soleil
+    'Sun': 1392700.0, // Ajout du Soleil
   };
 
   final Map<String, Color> planetColors = {
-    'Mercury': Color(0xFF9F9F9F),   // Gris métallique
-    'Venus': Color(0xFFE6E6BA),     // Jaune pâle
-    'Mars': Color(0xFFE67A50),      // Rouge-orange rouillé
-    'Jupiter': Color(0xFFF3D3A8),   // Beige strié
-    'Saturn': Color(0xFFEDD59F),    // Jaune doré
-    'Uranus': Color(0xFF9FE3E3),    // Bleu-vert glacé
-    'Neptune': Color(0xFF4B70DD),   // Bleu profond
-    'Sun': Color(0xFFFFDF00),       // Jaune solaire
-    'Moon': Color(0xFFF4F6F0),      // Blanc lunaire
+    'Mercury': Color(0xFF9F9F9F), // Gris métallique
+    'Venus': Color(0xFFE6E6BA), // Jaune pâle
+    'Mars': Color(0xFFE67A50), // Rouge-orange rouillé
+    'Jupiter': Color(0xFFF3D3A8), // Beige strié
+    'Saturn': Color(0xFFEDD59F), // Jaune doré
+    'Uranus': Color(0xFF9FE3E3), // Bleu-vert glacé
+    'Neptune': Color(0xFF4B70DD), // Bleu profond
+    'Sun': Color(0xFFFFDF00), // Jaune solaire
+    'Moon': Color(0xFFF4F6F0), // Blanc lunaire
   };
 
-  MyPainter(
-    this.context,
-    this.data,
-    this.phoneState,
-  );
+  MyPainter(this.context, this.data, this.phoneState);
 
   @override
   bool shouldRepaint(MyPainter oldDelegate) {
-    return oldDelegate.data != data ||
-        oldDelegate.phoneState != phoneState;
+    return oldDelegate.data != data || oldDelegate.phoneState != phoneState;
   }
 
   @override
@@ -68,13 +63,19 @@ class MyPainter extends CustomPainter {
       // La matrice de rotation du téléphone (monde -> téléphone) est formée
       // par les vecteurs des axes du téléphone comme lignes.
       final vm.Vector3 phoneX = vm.Vector3(
-        phoneState.rightVector.x, phoneState.rightVector.y, phoneState.rightVector.z
+        phoneState.rightVector.x,
+        phoneState.rightVector.y,
+        phoneState.rightVector.z,
       );
       final vm.Vector3 phoneY = vm.Vector3(
-        phoneState.upVector.x, phoneState.upVector.y, phoneState.upVector.z
+        phoneState.upVector.x,
+        phoneState.upVector.y,
+        phoneState.upVector.z,
       );
       final vm.Vector3 phoneZ = vm.Vector3(
-        phoneState.backVector.x, phoneState.backVector.y, phoneState.backVector.z
+        phoneState.backVector.x,
+        phoneState.backVector.y,
+        phoneState.backVector.z,
       );
 
       // Matrice pour transformer du monde vers les coordonnées du téléphone (View Matrix)
@@ -82,15 +83,26 @@ class MyPainter extends CustomPainter {
       // alors R transpose transforme du monde vers le téléphone.
       // Ici, phoneX, phoneY, phoneZ sont déjà des vecteurs lignes pour la matrice inverse.
       final vm.Matrix3 viewMatrix = vm.Matrix3.zero();
-      viewMatrix.setRow(0, phoneX); // L'axe X du téléphone devient la première ligne
-      viewMatrix.setRow(1, phoneY); // L'axe Y du téléphone devient la deuxième ligne
-      viewMatrix.setRow(2, phoneZ); // L'axe Z du téléphone (arrière) devient la troisième ligne
+      viewMatrix.setRow(
+        0,
+        phoneX,
+      ); // L'axe X du téléphone devient la première ligne
+      viewMatrix.setRow(
+        1,
+        phoneY,
+      ); // L'axe Y du téléphone devient la deuxième ligne
+      viewMatrix.setRow(
+        2,
+        phoneZ,
+      ); // L'axe Z du téléphone (arrière) devient la troisième ligne
 
       for (var astra in data.props) {
         if (astra.name == 'Earth') continue;
 
         // 1. Coordonnées de l'astre dans le système du monde (Est, Nord, Zénith)
-        double azRad = radians(astra.azimuth); // Azimut: Est=0, Nord=90, Ouest=180, Sud=270
+        double azRad = radians(
+          astra.azimuth,
+        ); // Azimut: Est=0, Nord=90, Ouest=180, Sud=270
         double altRad = radians(astra.altitude); // Altitude
         double distKm = astra.distanceInKM;
 
@@ -111,7 +123,7 @@ class MyPainter extends CustomPainter {
         // Utilisons la convention: X: Est, Y: Nord, Z: Zénith
         double xWorld = distKm * cos(altRad) * sin(azRad); // Devrait être Est
         double yWorld = distKm * cos(altRad) * cos(azRad); // Devrait être Nord
-        double zWorld = distKm * sin(altRad);             // Zénith
+        double zWorld = distKm * sin(altRad); // Zénith
 
         vm.Vector3 pWorld = vm.Vector3(xWorld, yWorld, zWorld);
 
@@ -141,7 +153,8 @@ class MyPainter extends CustomPainter {
         double angleVerticalDeg = angleVerticalRad * 180 / pi;
 
         // 5. Vérifier si dans le champ de vision
-        if (angleHorizontalDeg.abs() > fovHalfDegrees || angleVerticalDeg.abs() > fovHalfDegrees) {
+        if (angleHorizontalDeg.abs() > fovHalfDegrees ||
+            angleVerticalDeg.abs() > fovHalfDegrees) {
           continue;
         }
 
@@ -150,12 +163,17 @@ class MyPainter extends CustomPainter {
         // L'axe Y positif de la caméra (pCamera.y) correspond au haut de l'écran.
         // Le canvas a (0,0) en haut à gauche, Y augmente vers le bas.
         double x = ox + angleHorizontalDeg * scaleDegToPixX;
-        double y = oy - angleVerticalDeg * scaleDegToPixY; // Inversion pour l'axe Y du canvas
+        double y =
+            oy -
+            angleVerticalDeg *
+                scaleDegToPixY; // Inversion pour l'axe Y du canvas
 
         // 7. Calcul de la taille apparente
         double planetDiameter = solarSystemPlanets[astra.name] ?? 0.0;
-        double distanceToPlanet = pCamera.length; // Distance réelle de la caméra à la planète
-        double apparentAngleRad = 2 * atan((planetDiameter / 2) / distanceToPlanet);
+        double distanceToPlanet =
+            pCamera.length; // Distance réelle de la caméra à la planète
+        double apparentAngleRad =
+            2 * atan((planetDiameter / 2) / distanceToPlanet);
         double apparentSize = (apparentAngleRad * 180 / pi) * scale;
         apparentSize = apparentSize.clamp(10.0, 50.0);
 

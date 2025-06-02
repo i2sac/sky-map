@@ -41,8 +41,14 @@ class PlanetInfoModal extends StatelessWidget {
             const SizedBox(height: 20),
             _buildInfoRow('Altitude:', '${astra.altitude.toStringAsFixed(2)}°'),
             _buildInfoRow('Azimuth:', '${astra.azimuth.toStringAsFixed(2)}°'),
-            _buildInfoRow('Distance (KM):', '${astra.distanceInKM.toStringAsFixed(0)} km'),
-            _buildInfoRow('Distance (AU):', '${astra.distanceAU.toStringAsFixed(0)} AU'),
+            _buildInfoRow(
+              'Distance (KM):',
+              '${astra.distanceInKM.toStringAsFixed(0)} km',
+            ),
+            _buildInfoRow(
+              'Distance (AU):',
+              '${astra.distanceAU.toStringAsFixed(0)} AU',
+            ),
             if (diameterKm != null)
               _buildInfoRow('Diamètre:', '${diameterKm.toStringAsFixed(0)} km'),
             // Ajoutez d'autres informations si nécessaire
@@ -51,7 +57,10 @@ class PlanetInfoModal extends StatelessWidget {
       ),
       actions: <Widget>[
         TextButton(
-          child: const Text('Fermer', style: TextStyle(color: Colors.amberAccent)),
+          child: const Text(
+            'Fermer',
+            style: TextStyle(color: Colors.amberAccent),
+          ),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -67,9 +76,16 @@ class PlanetInfoModal extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: Colors.white70, fontSize: 14)),
-          Text(value, style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
-} 
+}

@@ -7,18 +7,18 @@ import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
+import 'package:sky_map/astras/bloc/astra_state.dart';
 import 'package:sky_map/phone/bloc/phone_bloc.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/view/canvas.dart';
-
-import 'astras/bloc/astra_state.dart';
 
 Future main() async {
   // Variables d'environnement
   await dotenv.load(fileName: '.env');
 
   // Observer
-  Bloc.observer = CustomBlocObserver(); // Assurez-vous que CustomBlocObserver est défini quelque part
+  Bloc.observer =
+      CustomBlocObserver(); // Assurez-vous que CustomBlocObserver est défini quelque part
   runApp(const MyApp());
 }
 
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       home: MultiBlocProvider(
         providers: [
           BlocProvider<AstraBloc>(
-            create: (context) => AstraBloc(data: [])..add(AppOpened()),
+            create: (context) => AstraBloc()..add(const AppOpened()),
           ),
           BlocProvider<PhoneBloc>(create: (context) => PhoneBloc()),
         ],
@@ -56,12 +56,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    // Listen to orientation changes
     RotationSensor.samplingPeriod = SensorInterval.gameInterval;
     _orientationStream = RotationSensor.orientationStream.listen((event) {
-      if (mounted && context.read<AstraBloc>().state.props.isNotEmpty) {
+      // Vérifier si AstraBloc a des données avant d'envoyer des événements PhoneBloc
+      // Cela évite d'envoyer des PhoneOrientationEvent pendant le chargement initial/rafraîchissement
+      // où astraState.props pourrait être vide temporairement.
+      final astraState = context.read<AstraBloc>().state;
+      if (mounted && astraState.astras.isNotEmpty) {
         context.read<PhoneBloc>().add(PhoneOrientationEvent(event));
-      } 
+      }
     });
   }
 
@@ -76,28 +79,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocBuilder<AstraBloc, AstraState>(
-        builder: (context, state) {
-          final notLoaded = state.props.isEmpty;
+        builder: (context, astraState) {
+          // Afficher le preloader si l'état des astres est vide (chargement initial ou pendant le rafraîchissement)
+          final showPreloader = astraState.astras.isEmpty;
+
           return RefreshIndicator(
             color: Colors.white,
             backgroundColor: Colors.blueAccent,
-            onRefresh: () async {
-              // Déclencher l'événement pour récupérer les données des astres
-              context.read<AstraBloc>().add(AppOpened());
-              // Attendre que le bloc traite et émette un nouvel état.
-              // Une approche simple est de retourner un Future complété après un court délai
-              // ou, mieux, attendre une confirmation spécifique du bloc si possible.
-              // Pour cet exemple, le simple fait de déclencher l'événement est souvent suffisant
-              // car le RefreshIndicator s'arrêtera et le BlocBuilder mettra à jour l'UI.
+            onRefresh: () {
+              final completer = Completer<void>();
+              context.read<AstraBloc>().add(AppOpened(completer: completer));
+              return completer.future;
             },
             child: Stack(
               children: [
+                // Toujours construire BlackCanvas pour qu'il soit prêt
+                // Sa visibilité sera gérée par le Stack et le preloader par-dessus
                 const BlackCanvas(),
-                if (notLoaded)
+                if (showPreloader)
                   Container(
                     height: MediaQuery.of(context).size.height,
                     width: MediaQuery.of(context).size.width,
-                    color: Colors.black,
+                    color: Colors.black.withOpacity(
+                      0.8,
+                    ), // Légère transparence pour voir le RefreshIndicator derrière
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -110,8 +115,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        const SpinKitFadingCircle(size: 40, color: Colors.white),
+                        const SizedBox(height: 20),
+                        const SpinKitFadingCircle(
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Actualisation des données...',
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
                       ],
                     ),
                   ),
