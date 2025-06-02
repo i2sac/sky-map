@@ -65,6 +65,9 @@ Le projet est structuré de manière à séparer clairement l’interface utilis
 - Utilisez le support intégré des tests unitaires de Flutter dans Visual Studio Code.
 - Consultez la sortie du terminal pour les logs et messages de débogage lors de l'exécution.
 
+### Documentation
+Afin de bien comprendre la logique derrière le projet ou même le refaire vous-même from scratch, merci de vous rendre dans [documentation.md](documentation.md).
+
 ## Contribution
 Les contributions sont les bienvenues ! Si vous souhaitez proposer des améliorations ou corriger des bugs :
 1. Forkez le dépôt.

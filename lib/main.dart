@@ -18,7 +18,7 @@ Future main() async {
   await dotenv.load(fileName: '.env');
 
   // Observer
-  Bloc.observer = CustomBlocObserver();
+  Bloc.observer = CustomBlocObserver(); // Assurez-vous que CustomBlocObserver est défini quelque part
   runApp(const MyApp());
 }
 
@@ -78,32 +78,45 @@ class _MyHomePageState extends State<MyHomePage> {
       body: BlocBuilder<AstraBloc, AstraState>(
         builder: (context, state) {
           final notLoaded = state.props.isEmpty;
-          return Stack(
-            children: [
-              const BlackCanvas(),
-              if (notLoaded)
-                Container(
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                  color: Colors.black,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    spacing: 10,
-                    children: [
-                      Text(
-                        'Sky Map',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+          return RefreshIndicator(
+            color: Colors.white,
+            backgroundColor: Colors.blueAccent,
+            onRefresh: () async {
+              // Déclencher l'événement pour récupérer les données des astres
+              context.read<AstraBloc>().add(AppOpened());
+              // Attendre que le bloc traite et émette un nouvel état.
+              // Une approche simple est de retourner un Future complété après un court délai
+              // ou, mieux, attendre une confirmation spécifique du bloc si possible.
+              // Pour cet exemple, le simple fait de déclencher l'événement est souvent suffisant
+              // car le RefreshIndicator s'arrêtera et le BlocBuilder mettra à jour l'UI.
+            },
+            child: Stack(
+              children: [
+                const BlackCanvas(),
+                if (notLoaded)
+                  Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    color: Colors.black,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Sky Map',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SpinKitFadingCircle(size: 40, color: Colors.white),
-                    ],
+                        const SizedBox(height: 10),
+                        const SpinKitFadingCircle(size: 40, color: Colors.white),
+                      ],
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           );
         },
       ),
