@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
-import 'package:sky_map/phone/view/canvas.dart';
 import 'package:sky_map/phone/bloc/phone_bloc.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
+import 'package:sky_map/phone/view/canvas.dart';
 
 import 'astras/bloc/astra_state.dart';
 
@@ -51,37 +51,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  StreamSubscription? _accelerometerSubscription;
-  StreamSubscription? _magnetometerSubscription;
+  StreamSubscription? _orientationStream;
 
   @override
   void initState() {
     super.initState();
     // Listen to orientation changes
-    AccelerometerEvent? accEv;
-    MagnetometerEvent? magEv;
-
-    _accelerometerSubscription = accelerometerEvents.listen((
-      AccelerometerEvent acc,
-    ) {
-      accEv = acc;
-    });
-
-    _magnetometerSubscription = magnetometerEvents.listen((
-        MagnetometerEvent mag,
-      ) {
-      magEv = mag;
-      if (accEv != null && magEv != null) {
-        // Dispatch the event to the PhoneBloc
-        context.read<PhoneBloc>().add(PhoneOrientationEvent(accEv!, magEv!));
-      }
+    RotationSensor.samplingPeriod = SensorInterval.normalInterval;
+    _orientationStream = RotationSensor.orientationStream.listen((event) {
+      if (mounted && context.read<AstraBloc>().state.props.isNotEmpty) {
+        context.read<PhoneBloc>().add(PhoneOrientationEvent(event));
+      } 
     });
   }
 
   @override
   void dispose() {
-    _accelerometerSubscription?.cancel();
-    _magnetometerSubscription?.cancel();
+    _orientationStream?.cancel();
     super.dispose();
   }
 

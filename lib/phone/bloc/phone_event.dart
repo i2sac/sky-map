@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
+import 'package:sky_map/phone/bloc/phone_bloc.dart';
 
 class PhoneEvent extends Equatable {
   @override
@@ -7,11 +8,29 @@ class PhoneEvent extends Equatable {
 }
 
 final class PhoneOrientationEvent extends PhoneEvent {
-  final AccelerometerEvent acc;
-  final MagnetometerEvent mag;
+  final OrientationEvent orientation;
 
-  PhoneOrientationEvent(this.acc, this.mag);
+  PhoneOrientationEvent(this.orientation);
 
   @override
-  List<Object> get props => [acc, mag];
+  List<Object> get props => [orientation];
+
+  OrientationEvent get val => orientation;
+
+  Quaternion simplifiedQuaternion() {
+    return Quaternion(
+      simplify(val.quaternion.x),
+      simplify(val.quaternion.y),
+      simplify(val.quaternion.z),
+      simplify(val.quaternion.w),
+    );
+  }
+
+  EulerAngles simplifiedEulerAngles() {
+    return EulerAngles(
+      simplify(val.eulerAngles.azimuth),
+      simplify(val.eulerAngles.pitch),
+      simplify(val.eulerAngles.roll),
+    );
+  }
 }

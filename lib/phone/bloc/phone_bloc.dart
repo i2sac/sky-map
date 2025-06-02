@@ -1,15 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/bloc/phone_state.dart';
 
 class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
-  AccelerometerEvent? _accEv;
-  MagnetometerEvent? _magEv;
+  PhoneOrientationEvent? _orientationEvent;
 
-  PhoneBloc() : super(const PhoneRotatedState(0, 0, 90)) {
+  PhoneBloc() : super(PhoneRotatedState(backVector: Vector3(0, 0, -1), rightVector: Vector3(1, 0, 0), upVector: Vector3(0, 1, 0), azimuth: 0, altitude: -180)) {
     on<PhoneOrientationEvent>(_phoneRotated);
   }
 
@@ -17,65 +16,41 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
     PhoneOrientationEvent event,
     Emitter<PhoneRotatedState> emit,
   ) async {
-    bool equals = _accEv != null && _magEv != null &&
-        _accEv!.x == event.acc.x &&
-        _accEv!.y == event.acc.y &&
-        _accEv!.z == event.acc.z &&
-        _magEv!.x == event.mag.x &&
-        _magEv!.y == event.mag.y &&
-        _magEv!.z == event.mag.z;
-        
-    if (equals) {
-      // Si le téléphone n'a pas bougé, on ne fait rien
-      return;
-    }
+    if (_orientationEvent != null &&
+        equalQuaternion(
+          _orientationEvent!.val.quaternion,
+          event.val.quaternion,
+        ))
+      {return;}
+    _orientationEvent = event;
 
-    // Mettre à jour les événements
-    _accEv = event.acc;
-    _magEv = event.mag;
+    Vector3 rightVector = Vector3(1, 0, 0);
+    Vector3 upVector = Vector3(0, 1, 0);
+    Vector3 backVector = Vector3(0, 0, -1);
 
-    double ax = event.acc.x;
-    double ay = event.acc.y;
-    double az = event.acc.z;
-    double mx = event.mag.x;
-    double my = event.mag.y;
-    double mz = event.mag.z;
+    // Rotation des vecteurs selon le quaternion
+    Vector3 rotatedRight = event.val.quaternion.rotateVector(rightVector);
+    Vector3 rotatedUp = event.val.quaternion.rotateVector(upVector);
+    Vector3 rotatedBack = event.val.quaternion.rotateVector(backVector);
 
-    // 1. Calcul du rawPitch (rotation autour de l'axe X)
-    double rawPitch = atan2(ay, az) * 180 / pi;
-    
-    // 2. Calcul du rawAzimuth (rotation autour de l'axe Z)
-    double rawAzimuth = atan2(-ax, sqrt(ay * ay + az * az)) * 180 / pi;
-    
-    // 3. Calcul du rawRoll (rotation autour de l'axe Y) grâce aux composantes magnétiques compensées
-    final double rollRad = rawAzimuth * pi / 180;
-    final double pitchRad = rawPitch * pi / 180;
+    // Calcul de l'azimuth et de l'altitude à partir du backVector
+    double azimuth = atan2(rotatedBack.x, rotatedBack.z) * (180 / pi);
+    double altitude = asin(rotatedBack.y) * (180 / pi);
 
-    final double cosRoll = cos(rollRad);
-    final double sinRoll = sin(rollRad);
-    final double cosPitch = cos(pitchRad);
-    final double sinPitch = sin(pitchRad);
+    // Normalisation de l'azimuth entre -180° et 180°
+    if (azimuth > 180) azimuth -= 360;
+    if (azimuth < -180) azimuth += 360;
 
-    double rawRoll = atan2(
-      - (mx * sinRoll * sinPitch + my * cosRoll - mz * sinRoll * cosPitch),
-      (mx * cosPitch + mz * sinPitch)
-    ) * 180 / pi;
+    print('Right Vecor: (${format(rotatedRight.x)}, ${format(rotatedRight.y)}, ${format(rotatedRight.z)})');
+    print('Up Vector: (${format(rotatedUp.x)}, ${format(rotatedUp.y)}, ${format(rotatedUp.z)})');
 
-    // Nouvelle attribution après permutation des axes (point de référence: 0,0,90) :
-    // - La rotation autour de l'axe X (rawPitch) contrôle la translation horizontale (newAzimuth)
-    // - La rotation autour de l'axe Z (rawAzimuth) contrôle la translation verticale (newPitch)
-    // - La rotation autour de l'axe Y (rawRoll) contrôle l'orientation du canvas (newRoll)
-    double newAzimuth = rawAzimuth;            // X -> horizontal
-    double newPitch   = rawPitch;           // Z -> vertical
-    double newRoll    = (-rawRoll) + 90;        // Y -> canvas orientation, avec compensation
-
-    print(
-      'Azimuth: ${format(newAzimuth)}, '
-      'Pitch: ${format(newPitch)}, '
-      'Roll: ${format(newRoll)}',
-    );
-
-    emit(PhoneRotatedState(newAzimuth, newPitch, newRoll));
+    emit(PhoneRotatedState(
+      backVector: rotatedBack,
+      rightVector: rotatedRight,
+      upVector: rotatedUp,
+      azimuth: azimuth,
+      altitude: altitude
+    ));
   }
 }
 
@@ -85,4 +60,42 @@ double radToDeg(double radians) {
 
 String format(double value) {
   return value.toStringAsFixed(2);
+}
+
+double simplify(double value) {
+  return (value * 100).round() / 100;
+}
+
+bool equalEulerAngles(EulerAngles a, EulerAngles b) {
+  return format(a.azimuth) == format(b.azimuth) &&
+      format(a.pitch) == format(b.pitch) &&
+      format(a.roll) == format(b.roll);
+}
+
+bool equalQuaternion(Quaternion a, Quaternion b) {
+  return format(a.x) == format(b.x) &&
+      format(a.y) == format(b.y) &&
+      format(a.z) == format(b.z) &&
+      format(a.w) == format(b.w);
+}
+
+extension QuaternionRotation on Quaternion {
+  /// Fait tourner le vecteur local [vLocal] (format [x,y,z]) par ce quaternion.
+  /// Renvoie [vx′, vy′, vz′] dans le référentiel global.
+  Vector3 rotateVector(Vector3 vLocal) {
+    // 1) On construit vQuat = (vLocal.x, vLocal.y, vLocal.z, 0)
+    final vQuat = Quaternion(vLocal.x, vLocal.y, vLocal.z, 0);
+
+    // 2) On normalise ce quaternion de rotation (sécurité)
+    final qNorm = normalize();
+
+    // 3) Son inverse (pour un quaternion unitaire, l’inverse = conjugué)
+    final qInv = qNorm.conjugate();
+
+    // 4) application :  v′ = qNorm × vQuat × qInv
+    final r = qNorm.multiply(vQuat).multiply(qInv);
+
+    // 5) on prend seulement x,y,z (la partie “w” doit être ≈ 0)
+    return Vector3(r.x, r.y, r.z);
+  }
 }
