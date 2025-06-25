@@ -54,14 +54,14 @@ class AstraBloc extends Bloc<AstraEvent, AstraState> {
       String basicAuth =
           'Basic ${base64.encode(utf8.encode('$appID:$appSecret'))}';
 
-      final now = DateTime.now();
+      final now = DateTime.now().toString();
       final queryParams = {
         'latitude': position.latitude.toString(),
         'longitude': position.longitude.toString(),
         'elevation': position.altitude.toString(),
-        'from_date': now.toString().split(' ')[0],
-        'to_date': now.toString().split(' ')[0],
-        'time': now.toString().split(' ')[1].split('.')[0],
+        'from_date': now.split(' ')[0],
+        'to_date': now.split(' ')[0],
+        'time': now.split(' ')[1].split('.')[0],
       };
       final uri = Uri.https(
         'api.astronomyapi.com',

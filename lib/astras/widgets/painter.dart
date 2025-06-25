@@ -110,19 +110,9 @@ class MyPainter extends CustomPainter {
         // X = Est, Y = Nord, Z = Zénith
         // Azimut 0 (Est): sin(0)=0, cos(0)=1 -> (0, dist*cos(alt), dist*sin(alt))
         // Azimut 90 (Nord): sin(pi/2)=1, cos(pi/2)=0 -> (dist*cos(alt), 0, dist*sin(alt))
-        // Il semble y avoir une convention commune où: X pointe vers le Nord, Y vers l'Est, Z vers le Zénith
-        // Ou X vers l'Est, Y vers le Nord, Z vers le Zénith. Votre code initial pour xWorld, yWorld:
-        // double xWorld = distKm * cos(altRad) * sin(azRad); // Est
-        // double yWorld = distKm * cos(altRad) * cos(azRad); // Nord
-        // double zWorld = distKm * sin(altRad);             // Zénith
-        // Cela semble correct: azimut 0 (Est) => sin(azRad)=0, cos(azRad)=1 => xWorld=0, yWorld = distKm*cos(altRad)
-        // NON, si Azimut 0 est Est: sin(0)=0 (pour X), cos(0)=1 (pour Y)
-        // Si on veut X=Est, Y=Nord, Z=Zénith:
-        // xWorld = distKm * cos(altRad) * cos(astra.azimuth - 90) // ou sin(azimuth) si azimut est de l'axe Y (Nord)
-        // yWorld = distKm * cos(altRad) * sin(astra.azimuth - 90)
-        // Utilisons la convention: X: Est, Y: Nord, Z: Zénith
-        double xWorld = distKm * cos(altRad) * sin(azRad); // Devrait être Est
-        double yWorld = distKm * cos(altRad) * cos(azRad); // Devrait être Nord
+        // Il y a une convention commune où: X pointe vers le Nord, Y vers l'Est, Z vers le Zénith
+        double xWorld = distKm * cos(altRad) * sin(azRad); // Est
+        double yWorld = distKm * cos(altRad) * cos(azRad); // Nord
         double zWorld = distKm * sin(altRad); // Zénith
 
         vm.Vector3 pWorld = vm.Vector3(xWorld, yWorld, zWorld);
@@ -175,7 +165,7 @@ class MyPainter extends CustomPainter {
         double apparentAngleRad =
             2 * atan((planetDiameter / 2) / distanceToPlanet);
         double apparentSize = (apparentAngleRad * 180 / pi) * scale;
-        apparentSize = apparentSize.clamp(10.0, 50.0);
+        apparentSize = apparentSize.clamp(10.0, 60.0);
 
         // 8. Dessin de l'astre
         canvas.drawCircle(
