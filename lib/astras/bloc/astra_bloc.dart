@@ -47,10 +47,11 @@ class AstraBloc extends Bloc<AstraEvent, AstraState> {
     }
 
     List<Astra> fetchedData = [];
+
     try {
       final position = await getPosition();
-      final appID = dotenv.env['APP_ID'];
-      final appSecret = dotenv.env['APP_SECRET'];
+      final appID = dotenv.env['APP_ID'] ?? '';
+      final appSecret = dotenv.env['APP_SECRET'] ?? '';
       String basicAuth =
           'Basic ${base64.encode(utf8.encode('$appID:$appSecret'))}';
 
