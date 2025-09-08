@@ -81,9 +81,7 @@ class AstraBloc extends Bloc<AstraEvent, AstraState> {
 
       if (r.statusCode == 200) {
         Map<String, dynamic> resData = jsonDecode(r.body);
-        if (resData["data"] != null &&
-            resData["data"]["table"] != null &&
-            resData["data"]["table"]["rows"] != null) {
+        if (resData["data"]?["table"]?["rows"] != null) {
           for (var row in resData["data"]["table"]["rows"]) {
             fetchedData.add(Astra.fromRow(row));
           }

@@ -17,8 +17,9 @@ Future main() async {
   await dotenv.load(fileName: '.env');
 
   // Observer
-  Bloc.observer =
-      CustomBlocObserver(); // Assurez-vous que CustomBlocObserver est défini quelque part
+  Bloc.observer = CustomBlocObserver();
+
+  // Initialisation de l'application
   runApp(const MyApp());
 }
 
@@ -56,14 +57,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    RotationSensor.samplingPeriod = SensorInterval.gameInterval;
+    RotationSensor.samplingPeriod = Duration(milliseconds: 14); // ~60Hz
     _orientationStream = RotationSensor.orientationStream.listen((event) {
       // Vérifier si AstraBloc a des données avant d'envoyer des événements PhoneBloc
       // Cela évite d'envoyer des PhoneOrientationEvent pendant le chargement initial/rafraîchissement
       // où astraState.props pourrait être vide temporairement.
-      final astraState = context.read<AstraBloc>().state;
-      if (mounted && astraState.astras.isNotEmpty) {
-        context.read<PhoneBloc>().add(PhoneOrientationEvent(event));
+      if (mounted) {
+        final astraState = context.read<AstraBloc>().state;
+        if (astraState.astras.isNotEmpty) {
+          context.read<PhoneBloc>().add(PhoneOrientationEvent(event));
+        }
       }
     });
   }
@@ -86,10 +89,10 @@ class _MyHomePageState extends State<MyHomePage> {
           return RefreshIndicator(
             color: Colors.white,
             backgroundColor: Colors.blueAccent,
-            onRefresh: () {
+            onRefresh: () async {
               final completer = Completer<void>();
               context.read<AstraBloc>().add(AppOpened(completer: completer));
-              return completer.future;
+              return await completer.future;
             },
             child: Stack(
               children: [
