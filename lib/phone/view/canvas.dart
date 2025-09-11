@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart'
+    show Vector3;
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_state.dart';
 import 'package:sky_map/astras/models/astra.dart';
@@ -152,8 +154,25 @@ class BlackCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    return BlocBuilder<PhoneBloc, PhoneRotatedState>(
+    return BlocBuilder<PhoneBloc, PhoneState>(
       builder: (context, phoneState) {
+        // Définition des états par défaut
+        final phoneRotatedState =
+            phoneState is PhoneRotatedState
+                ? phoneState
+                : PhoneRotatedState(
+                  backVector: Vector3(0, 0, -1),
+                  rightVector: Vector3(1, 0, 0),
+                  upVector: Vector3(0, 1, 0),
+                  azimuth: 0,
+                  altitude: -180,
+                );
+
+        final phonePositionState =
+            phoneState is PhonePositionState
+                ? phoneState
+                : null;
+
         return BlocBuilder<AstraBloc, AstraState>(
           builder: (context, astraState) {
             return GestureDetector(
@@ -162,12 +181,17 @@ class BlackCanvas extends StatelessWidget {
                     context,
                     details,
                     astraState,
-                    phoneState,
+                    phoneRotatedState,
                     screenSize,
                   ),
               child: CustomPaint(
                 size: Size.infinite, // ou screenSize pour être plus précis
-                painter: MyPainter(context, astraState, phoneState),
+                painter: MyPainter(
+                  context,
+                  astraState,
+                  phoneRotatedState,
+                  phonePositionState,
+                ),
               ),
             );
           },

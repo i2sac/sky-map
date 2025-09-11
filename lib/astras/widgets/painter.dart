@@ -1,14 +1,20 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_state.dart';
+import 'package:sky_map/phone/bloc/phone_bloc.dart';
 import 'package:sky_map/phone/bloc/phone_state.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class MyPainter extends CustomPainter {
   final BuildContext context;
   final AstraState data;
-  final PhoneRotatedState phoneState;
+  final PhoneRotatedState phoneRotatedState;
+  PhonePositionState? oldPhonePositionState;
+  PhonePositionState? phonePositionState;
   final double scale = 100.0; // Scaling factor for apparent size
   final Map<String, double> solarSystemPlanets = {
     'Moon': 3474.8, // Diamètre en km
@@ -34,15 +40,21 @@ class MyPainter extends CustomPainter {
     'Moon': Color(0xFFF4F6F0), // Blanc lunaire
   };
 
-  MyPainter(this.context, this.data, this.phoneState);
+  MyPainter(
+    this.context,
+    this.data,
+    this.phoneRotatedState,
+    this.phonePositionState,
+  );
 
   @override
   bool shouldRepaint(MyPainter oldDelegate) {
-    return oldDelegate.data != data || oldDelegate.phoneState != phoneState;
+    return oldDelegate.data != data ||
+        oldDelegate.phoneRotatedState != phoneRotatedState;
   }
 
   @override
-  void paint(Canvas canvas, Size size) {
+  Future<void> paint(Canvas canvas, Size size) async {
     double ox = size.width / 2;
     double oy = size.height / 2;
 
@@ -54,6 +66,15 @@ class MyPainter extends CustomPainter {
     double scaleDegToPixX = size.width / fovDegrees;
     double scaleDegToPixY = size.height / fovDegrees;
 
+    if (phonePositionState != null &&
+        phonePositionState != oldPhonePositionState) {
+      oldPhonePositionState = phonePositionState;
+      final lat = phonePositionState!.latitude;
+      final long = phonePositionState!.longitude;
+      final constData = phonePositionState!.constellationData;
+      print(constData[0]);
+    }
+
     if (data.props.isNotEmpty) {
       // Les vecteurs du téléphone sont déjà dans le référentiel du monde.
       // rightVector = X du téléphone dans le monde
@@ -63,19 +84,19 @@ class MyPainter extends CustomPainter {
       // La matrice de rotation du téléphone (monde -> téléphone) est formée
       // par les vecteurs des axes du téléphone comme lignes.
       final vm.Vector3 phoneX = vm.Vector3(
-        phoneState.rightVector.x,
-        phoneState.rightVector.y,
-        phoneState.rightVector.z,
+        phoneRotatedState.rightVector.x,
+        phoneRotatedState.rightVector.y,
+        phoneRotatedState.rightVector.z,
       );
       final vm.Vector3 phoneY = vm.Vector3(
-        phoneState.upVector.x,
-        phoneState.upVector.y,
-        phoneState.upVector.z,
+        phoneRotatedState.upVector.x,
+        phoneRotatedState.upVector.y,
+        phoneRotatedState.upVector.z,
       );
       final vm.Vector3 phoneZ = vm.Vector3(
-        phoneState.backVector.x,
-        phoneState.backVector.y,
-        phoneState.backVector.z,
+        phoneRotatedState.backVector.x,
+        phoneRotatedState.backVector.y,
+        phoneRotatedState.backVector.z,
       );
 
       // Matrice pour transformer du monde vers les coordonnées du téléphone (View Matrix)
@@ -100,10 +121,10 @@ class MyPainter extends CustomPainter {
         if (astra.name == 'Earth') continue;
 
         // 1. Coordonnées de l'astre dans le système du monde (Est, Nord, Zénith)
-        double azRad = radians(
+        double azRad = degToRad(
           astra.azimuth,
         ); // Azimut: Est=0, Nord=90, Ouest=180, Sud=270
-        double altRad = radians(astra.altitude); // Altitude
+        double altRad = degToRad(astra.altitude); // Altitude
         double distKm = astra.distanceInKM;
 
         // Conversion en coordonnées cartésiennes du monde
@@ -178,8 +199,96 @@ class MyPainter extends CustomPainter {
       }
     }
   }
+}
 
-  double radians(double degrees) {
-    return degrees * pi / 180;
+double degToRad(double degrees) {
+  return degrees * pi / 180;
+}
+
+double radToDeg(double radians) {
+  return radians * 180 / pi;
+}
+
+/// Exemple de fonction pour calculer l'heure sidérale locale (approximation)
+double calculateLST(DateTime date, double longitude) {
+  // Cette formule est simplifiée.
+  // Vous pouvez consulter des formules plus précises.
+  final JD = date.millisecondsSinceEpoch / 86400000 + 2440587.5; // Julian Date
+  final T = (JD - 2451545.0) / 36525.0;
+  // GMST en degrés (formule approchée)
+  final GMST =
+      280.46061837 +
+      360.98564736629 * (JD - 2451545) +
+      T * T * 0.000387933 -
+      T * T * T / 38710000;
+  // LST
+  double LST = (GMST + longitude) % 360;
+  if (LST < 0) LST += 360;
+  return LST;
+}
+
+/// Conversion de RA/dec en altitude et azimut.
+Map<String, double> equatorialToHorizontal({
+  required double raDeg, // en degrés
+  required double decDeg, // en degrés
+  required DateTime date,
+  required double latitude, // en degrés
+  required double longitude, // en degrés
+}) {
+  // Calcul de l'heure sidérale locale en degrés
+  double LSTDeg = calculateLST(date, longitude);
+  // Calcul de l'angle horaire en degrés
+  double HADeg = LSTDeg - raDeg;
+  // Normalisation de l'angle horaire
+  HADeg = HADeg % 360;
+  if (HADeg > 180) HADeg -= 360;
+
+  // Conversion en radians
+  double decRad = degToRad(decDeg);
+  double latRad = degToRad(latitude);
+  double HARad = degToRad(HADeg);
+
+  // Calcul de l'altitude
+  double altRad = asin(
+    sin(decRad) * sin(latRad) + cos(decRad) * cos(latRad) * cos(HARad),
+  );
+  // Calcul de l'azimut
+  double azRad = atan2(
+    sin(HARad),
+    cos(HARad) * sin(latRad) - tan(decRad) * cos(latRad),
+  );
+  // Ajustement de l'azimut pour obtenir une valeur entre 0 et 360 degrés
+  double azDeg = (radToDeg(azRad) + 360) % 360;
+  double altDeg = radToDeg(altRad);
+
+  return {'alt': altDeg, 'az': azDeg};
+}
+
+List<dynamic> parseConstellationsCoords(
+  List<dynamic> constellations,
+  lat,
+  long,
+) {
+  for (var constellation in constellations) {
+    var newCoords = [];
+    for (var figure in constellation['coordinates']) {
+      List<dynamic> path = [];
+      for (var star in figure) {
+        double ra = star[0]; // Ascension droite en degrés
+        double dec = star[1]; // Déclinaison en degrés
+        var result = equatorialToHorizontal(
+          raDeg: ra,
+          decDeg: dec,
+          date: DateTime.now().toUtc(),
+          latitude: lat,
+          longitude: long,
+        );
+        path.add([result['alt'], result['az']]);
+      }
+      newCoords.add(path);
+    }
+    constellation['coordinates'] = newCoords;
   }
+
+  return constellations;
 }

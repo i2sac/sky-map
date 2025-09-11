@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
@@ -8,6 +10,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
 import 'package:sky_map/astras/bloc/astra_state.dart';
+import 'package:sky_map/astras/widgets/painter.dart';
 import 'package:sky_map/phone/bloc/phone_bloc.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/view/canvas.dart';
@@ -57,6 +60,44 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await _initPositioning();
+    _setupOrientationStream();
+  }
+
+  Future<void> _initPositioning() async {
+    try {
+      final position = await getPosition();
+      final fileContent = await rootBundle.loadString(
+        'assets/constellations.lines.json',
+      );
+
+      final jsonData = parseConstellationsCoords(
+        jsonDecode(fileContent) as List<dynamic>,
+        position.latitude,
+        position.longitude,
+      );
+
+      if (mounted) {
+        context.read<PhoneBloc>().add(
+          PhonePositionEvent(
+            latitude: position.latitude,
+            longitude: position.longitude,
+            constellationData: jsonData
+          ),
+        );
+        // Une fois la position obtenue, charger les données des astres
+        context.read<AstraBloc>().add(const AppOpened());
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération de la position : $e');
+    }
+  }
+
+  void _setupOrientationStream() {
     RotationSensor.samplingPeriod = Duration(milliseconds: 14); // ~60Hz
     _orientationStream = RotationSensor.orientationStream.listen((event) {
       // Vérifier si AstraBloc a des données avant d'envoyer des événements PhoneBloc

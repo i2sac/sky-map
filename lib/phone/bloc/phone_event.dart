@@ -34,3 +34,14 @@ final class PhoneOrientationEvent extends PhoneEvent {
     );
   }
 }
+
+final class PhonePositionEvent extends PhoneEvent {
+  final double latitude, longitude;
+  final List<dynamic> constellationData;
+
+  PhonePositionEvent({
+    required this.latitude,
+    required this.longitude,
+    required this.constellationData,
+  });
+}

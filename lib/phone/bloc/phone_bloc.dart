@@ -5,8 +5,9 @@ import 'package:flutter_rotation_sensor/flutter_rotation_sensor.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/bloc/phone_state.dart';
 
-class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
-  PhoneOrientationEvent? _orientationEvent;
+class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
+  PhoneOrientationEvent? _lastOrientationEvent;
+  PhonePositionEvent? _lastPositionEvent;
 
   PhoneBloc()
     : super(
@@ -19,20 +20,21 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
         ),
       ) {
     on<PhoneOrientationEvent>(_phoneRotated);
+    on<PhonePositionEvent>(_phonePositioned);
   }
 
   Future<void> _phoneRotated(
     PhoneOrientationEvent event,
-    Emitter<PhoneRotatedState> emit,
+    Emitter<PhoneState> emit,
   ) async {
-    if (_orientationEvent != null &&
+    if (_lastOrientationEvent != null &&
         equalQuaternion(
-          _orientationEvent!.val.quaternion,
+          _lastOrientationEvent!.val.quaternion,
           event.val.quaternion,
         )) {
       return;
     }
-    _orientationEvent = event;
+    _lastOrientationEvent = event;
 
     Vector3 rightVector = Vector3(1, 0, 0);
     Vector3 upVector = Vector3(0, 1, 0);
@@ -61,6 +63,46 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneRotatedState> {
         upVector: rotatedUp,
         azimuth: azimuth,
         altitude: altitude,
+      ),
+    );
+  }
+
+  Future<void> _phonePositioned(
+    PhonePositionEvent event,
+    Emitter<PhoneState> emit,
+  ) async {
+    // 1. Vérifier d'abord si la nouvelle position est nulle
+    if (event.latitude == 0 && event.longitude == 0) {
+      print('Position nulle reçue, ignorée');
+      return Future.value();
+    }
+
+    // 2. Vérifier si la position est hors limites
+    if (event.latitude.abs() > 90 || event.longitude.abs() > 180) {
+      print(
+        'Position hors limites reçue : ${event.latitude}, ${event.longitude}',
+      );
+      return Future.value();
+    }
+
+    // 3. Vérifier si la position est inchangée
+    if (_lastPositionEvent != null &&
+        _lastPositionEvent!.latitude == event.latitude &&
+        _lastPositionEvent!.longitude == event.longitude) {
+      return Future.value();
+    }
+
+    // 4. Si on arrive ici, la position est valide et différente
+    _lastPositionEvent = event;
+    print(
+      'Nouvelle position valide émise : ${event.latitude}, ${event.longitude}',
+    );
+
+    emit(
+      PhonePositionState(
+        latitude: event.latitude,
+        longitude: event.longitude,
+        constellationData: event.constellationData,
       ),
     );
   }
