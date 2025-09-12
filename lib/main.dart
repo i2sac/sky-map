@@ -10,10 +10,10 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:sky_map/astras/bloc/astra_bloc.dart';
 import 'package:sky_map/astras/bloc/astra_event.dart';
 import 'package:sky_map/astras/bloc/astra_state.dart';
-import 'package:sky_map/astras/widgets/painter.dart';
 import 'package:sky_map/phone/bloc/phone_bloc.dart';
 import 'package:sky_map/phone/bloc/phone_event.dart';
 import 'package:sky_map/phone/view/canvas.dart';
+import 'package:sky_map/utils.dart';
 
 Future main() async {
   // Variables d'environnement

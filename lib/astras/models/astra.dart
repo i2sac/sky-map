@@ -6,8 +6,6 @@ class Astra extends Equatable {
       distanceKM,
       altitude,
       azimuth,
-      rightAscension,
-      declination,
       magnitude;
 
   const Astra({
@@ -16,8 +14,6 @@ class Astra extends Equatable {
     required this.distanceKM,
     required this.altitude,
     required this.azimuth,
-    required this.rightAscension,
-    required this.declination,
     required this.constellation,
     required this.magnitude,
   });
@@ -32,8 +28,6 @@ class Astra extends Equatable {
     distanceKM,
     altitude,
     azimuth,
-    rightAscension,
-    declination,
     constellation,
     magnitude,
   ];
@@ -49,12 +43,6 @@ class Astra extends Equatable {
       ),
       azimuth: double.parse(
         cell["position"]["horizontal"]["azimuth"]["degrees"],
-      ),
-      rightAscension: double.parse(
-        cell["position"]["equatorial"]["rightAscension"]["hours"],
-      ),
-      declination: double.parse(
-        cell["position"]["equatorial"]["declination"]["degrees"],
       ),
       constellation: cell["position"]["constellation"]["name"],
       magnitude: cell["extraInfo"]["magnitude"] ?? 0,
