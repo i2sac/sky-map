@@ -74,7 +74,10 @@ class _BlackCanvasState extends State<BlackCanvas> {
     ) = viewConfigs(screenSize, phoneState);
 
     Astra? tappedAstra;
-    double? tappedSize;
+    double? tappedRawSize; // apparent size before clamp, for better ordering
+    double? tappedHitDistance; // distance from tap to center
+    double? tappedDepth; // distance to camera for tie-break
+    const double eps = 1e-3;
 
     for (var astra in astraState.astras) {
       if (astra.name == 'Earth') continue;
@@ -108,18 +111,49 @@ class _BlackCanvasState extends State<BlackCanvas> {
       double distanceToPlanet = pCamera.length;
       double apparentAngleRad =
           2 * atan((planetDiameter / 2) / distanceToPlanet);
-      double apparentSize =
-          (apparentAngleRad * 180 / pi) *
-          double.parse(dotenv.env['SCALE'] ?? '100.0');
-      apparentSize = apparentSize.clamp(10.0, 50.0);
+      // raw on-screen size before clamp (use same scale as painter/config)
+      final double scale = double.parse(dotenv.env['SCALE'] ?? '100.0');
+      double rawApparentSize = (apparentAngleRad * 180 / pi) * scale;
+      double apparentSize = rawApparentSize.clamp(10.0, 50.0);
 
       // Vérifier si le clic est dans le cercle de l'astre
       final double distanceToAstraCenter =
           (Offset(projectedX, projectedY) - tapPosition).distance;
-      if (distanceToAstraCenter <= apparentSize &&
-          (tappedSize == null || planetDiameter < tappedSize)) {
-        tappedSize = planetDiameter;
-        tappedAstra = astra;
+      if (distanceToAstraCenter <= apparentSize) {
+        if (tappedRawSize == null) {
+          tappedRawSize = rawApparentSize;
+          tappedHitDistance = distanceToAstraCenter;
+          tappedDepth = distanceToPlanet;
+          tappedAstra = astra;
+        } else {
+          // Prefer the smallest on-screen size
+          if (rawApparentSize + eps < tappedRawSize!) {
+            tappedRawSize = rawApparentSize;
+            tappedHitDistance = distanceToAstraCenter;
+            tappedDepth = distanceToPlanet;
+            tappedAstra = astra;
+          } else if ((rawApparentSize - tappedRawSize!).abs() <= eps) {
+            // Tie-breaker 1: closer to tap center
+            if (distanceToAstraCenter + eps <
+                (tappedHitDistance ?? double.infinity)) {
+              tappedRawSize = rawApparentSize;
+              tappedHitDistance = distanceToAstraCenter;
+              tappedDepth = distanceToPlanet;
+              tappedAstra = astra;
+            } else if ((distanceToAstraCenter -
+                        (tappedHitDistance ?? double.infinity))
+                    .abs() <=
+                eps) {
+              // Tie-breaker 2: the one closer to the camera (on top)
+              if (distanceToPlanet + eps < (tappedDepth ?? double.infinity)) {
+                tappedRawSize = rawApparentSize;
+                tappedHitDistance = distanceToAstraCenter;
+                tappedDepth = distanceToPlanet;
+                tappedAstra = astra;
+              }
+            }
+          }
+        }
       }
     }
 
