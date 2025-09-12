@@ -127,12 +127,12 @@ class _BlackCanvasState extends State<BlackCanvas> {
           tappedAstra = astra;
         } else {
           // Prefer the smallest on-screen size
-          if (rawApparentSize + eps < tappedRawSize!) {
+          if (rawApparentSize + eps < tappedRawSize) {
             tappedRawSize = rawApparentSize;
             tappedHitDistance = distanceToAstraCenter;
             tappedDepth = distanceToPlanet;
             tappedAstra = astra;
-          } else if ((rawApparentSize - tappedRawSize!).abs() <= eps) {
+          } else if ((rawApparentSize - tappedRawSize.abs()) <= eps) {
             // Tie-breaker 1: closer to tap center
             if (distanceToAstraCenter + eps <
                 (tappedHitDistance ?? double.infinity)) {

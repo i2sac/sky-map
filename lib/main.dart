@@ -86,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
           PhonePositionEvent(
             latitude: position.latitude,
             longitude: position.longitude,
-            constellationData: jsonData
+            constellationData: jsonData,
           ),
         );
         // Une fois la position obtenue, charger les données des astres
@@ -135,44 +135,56 @@ class _MyHomePageState extends State<MyHomePage> {
               context.read<AstraBloc>().add(AppOpened(completer: completer));
               return await completer.future;
             },
-            child: Stack(
-              children: [
-                // Toujours construire BlackCanvas pour qu'il soit prêt
-                // Sa visibilité sera gérée par le Stack et le preloader par-dessus
-                const BlackCanvas(),
-                if (showPreloader)
-                  Container(
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                    color: Colors.black.withOpacity(
-                      0.8,
-                    ), // Légère transparence pour voir le RefreshIndicator derrière
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Sky Map',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+            // Minimal fix: RefreshIndicator needs a Scrollable child.
+            // We wrap the full-screen Stack in a SingleChildScrollView with
+            // AlwaysScrollableScrollPhysics so the pull gesture is detected
+            // even if the content is the exact screen height.
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                // Ensure the scrollable area is at least the screen height
+                height: MediaQuery.of(context).size.height,
+                child: Stack(
+                  children: [
+                    // Full-screen sky canvas
+                    const BlackCanvas(),
+                    // Preloader overlay on top when data is loading
+                    if (showPreloader)
+                      Container(
+                        height: MediaQuery.of(context).size.height,
+                        width: MediaQuery.of(context).size.width,
+                        color: Colors.black.withOpacity(0.8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Sky Map',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const SpinKitFadingCircle(
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Actualisation des données...',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        const SpinKitFadingCircle(
-                          size: 40,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Actualisation des données...',
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+                      ),
+                  ],
+                ),
+              ),
             ),
           );
         },
