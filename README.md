@@ -12,14 +12,26 @@ Bienvenue sur **Sky Map**, une application Flutter innovante qui vous permet de 
 - [Licence](#licence)
 
 ## Présentation
-Sky Map est une application multiplateforme construite avec Flutter. Elle exploite les capteurs du téléphone pour orienter et afficher en temps réel les astres, avec une interface graphique soignée et des animations fluides. Parfait pour les passionnés d’astronomie et les curieux souhaitant explorer le ciel nocturne ! ✨
+Sky Map est une application multiplateforme construite avec Flutter. Elle exploite les capteurs du téléphone pour orienter et afficher en temps réel les astres, avec une interface graphique soignée et des animations fluides. Parfait pour les passionnés d’astronomie et les curieux souhaitant explorer le ciel nocturne ! 
 
 ## Fonctionnalités
-- **Affichage en temps réel** des constellations et planètes
-- **Support multi-supports** : Windows, Linux, Web et iOS
-- **Interaction tactile** et détection d’orientation grâce aux capteurs
-- **Rendu graphique personnalisé** via des widgets Flutter
-- **Structure modulaire** facilitant l’ajout de nouvelles fonctionnalités
+- **Affichage en temps réel** des constellations et planètes avec une précision optimale
+- **Interaction tactile** et détection d'orientation grâce aux capteurs du téléphone
+- **Rendu graphique personnalisé** via des widgets Flutter et Canvas
+- **Structure modulaire** facilitant l'ajout de nouvelles fonctionnalités
+- **Visée précise** des objets célestes avec gestion des quaternions de position
+
+## Données et Technologies
+
+### Source des données
+- Les données des constellations proviennent du dépôt [celestial_data](https://github.com/dieghernan/celestial-data) de l'utilisateur GitHub dieghernan
+- Fichier source original : [constellations.lines.geojson](https://raw.githubusercontent.com/dieghernan/celestial_data/refs/heads/main/data/constellations.lines.geojson)
+- Le fichier a été retravaillé pour obtenir le format optimisé : `assets/constellations.lines.json`
+
+### Technologies clés
+- **Détection de mouvement** : Utilisation du package `flutter_rotation_sensor` pour obtenir les quaternions de position, offrant une stabilité optimale pour le suivi de l'orientation du téléphone
+- **Rendu graphique** : Implémentation personnalisée avec Canvas pour une visualisation fluide des objets célestes
+- **Optimisation** : Taille des objets célestes dynamiquement ajustée pour une meilleure expérience utilisateur
 
 ## Architecture du projet
 Le projet est structuré de manière à séparer clairement l’interface utilisateur, la logique métier et la gestion des plateformes :

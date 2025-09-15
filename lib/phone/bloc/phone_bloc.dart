@@ -73,15 +73,11 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
   ) async {
     // 1. Vérifier d'abord si la nouvelle position est nulle
     if (event.latitude == 0 && event.longitude == 0) {
-      print('Position nulle reçue, ignorée');
       return Future.value();
     }
 
     // 2. Vérifier si la position est hors limites
     if (event.latitude.abs() > 90 || event.longitude.abs() > 180) {
-      print(
-        'Position hors limites reçue : ${event.latitude}, ${event.longitude}',
-      );
       return Future.value();
     }
 
@@ -94,9 +90,6 @@ class PhoneBloc extends Bloc<PhoneEvent, PhoneState> {
 
     // 4. Si on arrive ici, la position est valide et différente
     _lastPositionEvent = event;
-    print(
-      'Nouvelle position valide émise : ${event.latitude}, ${event.longitude}',
-    );
 
     emit(
       PhonePositionState(

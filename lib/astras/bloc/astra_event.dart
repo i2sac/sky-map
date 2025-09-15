@@ -6,10 +6,15 @@ sealed class AstraEvent extends Equatable {
 }
 
 final class AppOpened extends AstraEvent {
-  final Completer<void>? completer;
-
-  const AppOpened({this.completer});
+  const AppOpened();
 
   @override
-  List<Object?> get props => [completer];
+  List<Object?> get props => [];
+}
+
+final class ResetAstras extends AstraEvent {
+  const ResetAstras();
+
+  @override
+  List<Object?> get props => [];
 }
